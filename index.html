@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terraform Security Linter</title>
+<style>
+:root {
+  --bg: #1a1d24;
+  --surface: #232730;
+  --surface-2: #2d323e;
+  --border: #3a4051;
+  --text: #e6e9f0;
+  --text-dim: #8a93a6;
+  --purple: #7c3aed;
+  --accent: #7c3aed;
+  --crit: #ef4444;
+  --high: #f97316;
+  --med: #eab308;
+  --low: #84cc16;
+  --info: #38bdf8;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+[data-theme="light"] {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+  --border: #cbd5e1;
+  --text: #1e293b;
+  --text-dim: #475569;
+  --purple: #6d28d9;
+  --accent: #6d28d9;
+  --crit: #b91c1c;
+  --high: #c2410c;
+  --med: #a16207;
+  --low: #4d7c0f;
+  --info: #0369a1;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); line-height: 1.5; min-height: 100vh; padding: 24px; }
+header { display: flex; justify-content: space-between; align-items: flex-start; max-width: 1300px; margin: 0 auto 24px; gap: 16px; }
+h1 { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+.subtitle { color: var(--text-dim); font-size: 13px; margin-top: 4px; }
+.theme-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-family: var(--mono); }
+.theme-btn:hover { border-color: var(--purple); }
+main { max-width: 1300px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; }
+h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin-bottom: 10px; }
+textarea { width: 100%; min-height: 380px; background: var(--bg); color: var(--text); border: 1px solid var(--border); border-radius: 4px; padding: 10px; font-family: var(--mono); font-size: 12px; line-height: 1.5; resize: vertical; }
+textarea:focus { outline: none; border-color: var(--purple); }
+.actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+button { background: var(--surface-2); border: 1px solid var(--border); color: var(--text); padding: 7px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; font-family: var(--mono); }
+button:hover { border-color: var(--purple); }
+button.primary { background: var(--purple); color: #ffffff; border-color: var(--purple); font-weight: 600; }
+button.primary:hover { filter: brightness(1.1); }
+.results { min-height: 380px; max-height: 620px; overflow-y: auto; }
+.results-empty { color: var(--text-dim); font-size: 13px; text-align: center; padding: 60px 0; }
+.summary { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.tag { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+.tag.crit { background: rgba(239, 68, 68, 0.15); color: var(--crit); }
+.tag.high { background: rgba(249, 115, 22, 0.15); color: var(--high); }
+.tag.med { background: rgba(234, 179, 8, 0.15); color: var(--med); }
+.tag.low { background: rgba(132, 204, 22, 0.15); color: var(--low); }
+.tag.info { background: rgba(56, 189, 248, 0.15); color: var(--info); }
+.finding { border-left: 3px solid var(--border); padding: 10px 12px; margin-bottom: 8px; background: var(--surface-2); border-radius: 0 4px 4px 0; }
+.finding.crit { border-left-color: var(--crit); }
+.finding.high { border-left-color: var(--high); }
+.finding.med { border-left-color: var(--med); }
+.finding.low { border-left-color: var(--low); }
+.finding.info { border-left-color: var(--info); }
+.finding-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+.finding-title { font-weight: 600; font-size: 13px; }
+.finding-resource { font-size: 11px; color: var(--text-dim); font-family: var(--mono); }
+.finding-detail { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.finding-fix { font-size: 12px; color: var(--text); margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+.finding-fix strong { color: var(--purple); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; }
+[data-theme="light"] .finding-fix strong { color: var(--purple); }
+footer { max-width: 1300px; margin: 24px auto 0; text-align: center; font-size: 11px; color: var(--text-dim); }
+.error-box { background: rgba(239, 68, 68, 0.08); border: 1px solid var(--crit); color: var(--crit); padding: 10px 12px; border-radius: 4px; font-size: 12px; font-family: var(--mono); margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Terraform Security Linter</h1>
+    <div class="subtitle">Static checks for HCL — public buckets, open SGs, unencrypted stores, hardcoded secrets. Browser-only.</div>
+  </div>
+  <button class="theme-btn" id="theme-btn">light</button>
+</header>
+<main>
+  <section class="panel">
+    <h2>Terraform HCL</h2>
+    <textarea id="input" placeholder="Paste .tf content (one or many resource blocks)."></textarea>
+    <div class="actions">
+      <button class="primary" id="analyze">Lint</button>
+      <button id="sample-1">Sample: S3 + SG</button>
+      <button id="sample-2">Sample: RDS + Lambda</button>
+      <button id="sample-3">Sample: IAM + KMS</button>
+      <button id="clear">Clear</button>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Findings</h2>
+    <div id="results" class="results">
+      <div class="results-empty">Paste HCL and click Lint.</div>
+    </div>
+  </section>
+</main>
+<footer>Static analysis. Pattern-based, AWS-focused. Run on your own machine. No data leaves the browser.</footer>
+<script>
+(function() {
+  const $ = id => document.getElementById(id);
+  const themeBtn = $('theme-btn');
+  themeBtn.addEventListener('click', () => {
+    const t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', t);
+    themeBtn.textContent = t === 'dark' ? 'light' : 'dark';
+  });
+
+  const SAMPLES = {
+    1: `resource "aws_s3_bucket" "data" {
+  bucket = "company-data"
+  acl    = "public-read"
+}
+
+resource "aws_security_group" "web" {
+  name = "web-sg"
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 3389
+    to_port     = 3389
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}`,
+    2: `resource "aws_db_instance" "main" {
+  identifier        = "prod-db"
+  engine            = "postgres"
+  instance_class    = "db.t3.medium"
+  allocated_storage = 100
+  username          = "admin"
+  password          = "Hunter2Password!"
+  publicly_accessible = true
+  storage_encrypted   = false
+  skip_final_snapshot = true
+}
+
+resource "aws_lambda_function" "api" {
+  function_name = "api"
+  role          = aws_iam_role.lambda.arn
+  handler       = "index.handler"
+  runtime       = "nodejs18.x"
+
+  environment {
+    variables = {
+      DB_PASSWORD     = "supersecret123"
+      STRIPE_API_KEY  = "sk_live_4eC39HqLyjWDarjtT1zdp7dc"
+      LOG_LEVEL       = "info"
+    }
+  }
+}`,
+    3: `resource "aws_iam_policy" "admin" {
+  name = "admin"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = "*"
+      Resource = "*"
+    }]
+  })
+}
+
+resource "aws_kms_key" "main" {
+  description = "main key"
+}
+
+resource "aws_cloudtrail" "main" {
+  name           = "main"
+  s3_bucket_name = "ct-bucket"
+}`
+  };
+
+  $('sample-1').addEventListener('click', () => $('input').value = SAMPLES[1]);
+  $('sample-2').addEventListener('click', () => $('input').value = SAMPLES[2]);
+  $('sample-3').addEventListener('click', () => $('input').value = SAMPLES[3]);
+  $('clear').addEventListener('click', () => { $('input').value = ''; $('results').innerHTML = '<div class="results-empty">Paste HCL and click Lint.</div>'; });
+  $('analyze').addEventListener('click', analyze);
+
+  function parseBlocks(hcl) {
+    const blocks = [];
+    const re = /resource\s+"([^"]+)"\s+"([^"]+)"\s*\{/g;
+    let m;
+    while ((m = re.exec(hcl)) !== null) {
+      const start = m.index + m[0].length;
+      let depth = 1, i = start;
+      while (i < hcl.length && depth > 0) {
+        if (hcl[i] === '{') depth++;
+        else if (hcl[i] === '}') depth--;
+        i++;
+      }
+      blocks.push({ type: m[1], name: m[2], body: hcl.slice(start, i - 1), line: hcl.slice(0, m.index).split('\n').length });
+    }
+    return blocks;
+  }
+
+  function looksLikeSecret(val) {
+    const v = String(val).replace(/^["']|["']$/g, '');
+    if (v.length < 8) return false;
+    if (/^\$\{.*\}$/.test(v) || /^var\./.test(v) || /^data\./.test(v) || /^local\./.test(v) || /^aws_/.test(v)) return false;
+    return /AKIA[A-Z0-9]{16}/.test(v) ||
+           /^sk_(live|test)_[A-Za-z0-9]{20,}/.test(v) ||
+           /^xox[baprs]-[A-Za-z0-9-]{10,}/.test(v) ||
+           /^ghp_[A-Za-z0-9]{30,}/.test(v) ||
+           /^[A-Za-z0-9+/]{40,}={0,2}$/.test(v) ||
+           /password|secret|token|apikey|api_key/i.test(v) && v.length >= 12;
+  }
+
+  const RULES = {
+    'aws_s3_bucket': (b, all) => {
+      const f = [];
+      if (/acl\s*=\s*"public-read(-write)?"/.test(b.body)) {
+        f.push({ sev: 'crit', title: 'Public S3 bucket ACL', detail: 'ACL grants read (or write) to AllUsers / AuthenticatedUsers.', fix: 'Set acl = "private" and use bucket policies + aws_s3_bucket_public_access_block.' });
+      }
+      const pab = all.find(x => x.type === 'aws_s3_bucket_public_access_block' && x.body.includes(b.name));
+      if (!pab) {
+        f.push({ sev: 'high', title: 'No aws_s3_bucket_public_access_block', detail: 'Without explicit Public Access Block, IAM/ACL drift can re-expose the bucket.', fix: 'Add aws_s3_bucket_public_access_block with all four flags = true.' });
+      }
+      const sse = all.find(x => x.type === 'aws_s3_bucket_server_side_encryption_configuration' && x.body.includes(b.name));
+      if (!sse) {
+        f.push({ sev: 'high', title: 'No SSE configuration', detail: 'No aws_s3_bucket_server_side_encryption_configuration found for this bucket.', fix: 'Add SSE-KMS with a customer-managed key. SSE-S3 is acceptable for non-sensitive data.' });
+      }
+      const ver = all.find(x => x.type === 'aws_s3_bucket_versioning' && x.body.includes(b.name));
+      if (!ver) {
+        f.push({ sev: 'med', title: 'No versioning configured', detail: 'Without versioning, accidental or malicious deletion is unrecoverable.', fix: 'Add aws_s3_bucket_versioning with status = "Enabled".' });
+      }
+      return f;
+    },
+    'aws_security_group': (b) => {
+      const f = [];
+      const ingress = b.body.match(/ingress\s*\{[\s\S]*?\}/g) || [];
+      ingress.forEach(rule => {
+        const open = /cidr_blocks\s*=\s*\[\s*"0\.0\.0\.0\/0"/.test(rule) || /cidr_blocks\s*=\s*\["::\/0"/.test(rule);
+        if (open) {
+          const port = (rule.match(/from_port\s*=\s*(\d+)/) || [])[1];
+          const sensitive = ['22','3389','3306','5432','27017','6379','9200','5984','11211','1433','5984'];
+          if (port && sensitive.includes(port)) {
+            f.push({ sev: 'crit', title: 'Sensitive port open to 0.0.0.0/0', detail: 'Port ' + port + ' (' + portName(port) + ') open to the world.', fix: 'Restrict cidr_blocks to specific IPs/CIDR. Use SSM Session Manager or bastion for SSH/RDP.' });
+          } else if (port) {
+            f.push({ sev: 'high', title: 'Port open to 0.0.0.0/0', detail: 'Port ' + port + ' open to the world.', fix: 'Restrict cidr_blocks. If public exposure is intentional, document and confirm.' });
+          } else if (/from_port\s*=\s*0/.test(rule) && /to_port\s*=\s*65535/.test(rule)) {
+            f.push({ sev: 'crit', title: 'All ports open to 0.0.0.0/0', detail: 'Ingress rule allows every TCP/UDP port from anywhere.', fix: 'Specify exact ports.' });
+          }
+        }
+      });
+      return f;
+    },
+    'aws_db_instance': (b) => {
+      const f = [];
+      if (/publicly_accessible\s*=\s*true/.test(b.body)) {
+        f.push({ sev: 'crit', title: 'RDS publicly accessible', detail: 'Database has a public endpoint.', fix: 'Set publicly_accessible = false. Access via VPC.' });
+      }
+      if (!/storage_encrypted\s*=\s*true/.test(b.body)) {
+        f.push({ sev: 'high', title: 'RDS storage not encrypted', detail: 'storage_encrypted is false or unset. Data at rest unencrypted.', fix: 'Set storage_encrypted = true and kms_key_id to a CMK.' });
+      }
+      const pwMatch = b.body.match(/password\s*=\s*("[^"]*"|'[^']*')/);
+      if (pwMatch && !pwMatch[1].startsWith('"${') && !/var\./.test(pwMatch[1]) && !/random_password/.test(pwMatch[1]) && !/data\./.test(pwMatch[1])) {
+        f.push({ sev: 'crit', title: 'RDS password hardcoded', detail: 'password is a literal string. Goes into state file as plaintext, into git history.', fix: 'Use random_password resource or Secrets Manager. Reference via aws_secretsmanager_secret_version.' });
+      }
+      if (/skip_final_snapshot\s*=\s*true/.test(b.body)) {
+        f.push({ sev: 'med', title: 'skip_final_snapshot = true', detail: 'No backup taken on destroy. Production loss.', fix: 'For production, set skip_final_snapshot = false and define final_snapshot_identifier.' });
+      }
+      if (!/backup_retention_period/.test(b.body) || /backup_retention_period\s*=\s*0/.test(b.body)) {
+        f.push({ sev: 'med', title: 'Backup retention not set or zero', detail: 'No automated backups.', fix: 'Set backup_retention_period to at least 7 (production: 14-35).' });
+      }
+      if (!/deletion_protection\s*=\s*true/.test(b.body)) {
+        f.push({ sev: 'low', title: 'Deletion protection off', detail: 'RDS instance can be destroyed by a single terraform apply.', fix: 'Set deletion_protection = true for production.' });
+      }
+      return f;
+    },
+    'aws_lambda_function': (b) => {
+      const f = [];
+      const env = b.body.match(/environment\s*\{[\s\S]*?\n\s*\}/);
+      if (env) {
+        const vars = env[0].match(/(\w+)\s*=\s*("[^"]*"|'[^']*')/g) || [];
+        vars.forEach(v => {
+          const m = v.match(/(\w+)\s*=\s*(.+)/);
+          if (!m) return;
+          if (looksLikeSecret(m[2]) || /password|secret|token|api_?key/i.test(m[1])) {
+            f.push({ sev: 'crit', title: 'Lambda env var looks like a secret: ' + m[1], detail: 'Environment variables are stored in clear in the function configuration and visible to anyone with lambda:GetFunction.', fix: 'Use Secrets Manager or SSM Parameter Store SecureString. Reference via data source. Rotate the leaked credential.' });
+          }
+        });
+      }
+      if (env && !/kms_key_arn/.test(b.body)) {
+        f.push({ sev: 'low', title: 'Lambda env not encrypted with CMK', detail: 'Default AWS-managed KMS is acceptable for non-sensitive data; CMK gives audit and rotation control.', fix: 'Set kms_key_arn to a CMK ARN.' });
+      }
+      if (!/tracing_config/.test(b.body)) {
+        f.push({ sev: 'low', title: 'X-Ray tracing not enabled', detail: 'No tracing_config block. Limited investigation visibility for incidents.', fix: 'Add tracing_config { mode = "Active" }.' });
+      }
+      return f;
+    },
+    'aws_iam_policy': (b) => {
+      const f = [];
+      if (/Action\s*=\s*"\*"/.test(b.body) || /"Action"\s*:\s*"\*"/.test(b.body)) {
+        f.push({ sev: 'crit', title: 'IAM policy with Action: "*"', detail: 'Grants every action.', fix: 'List specific actions. Use IAM Access Analyzer to identify minimum needed set.' });
+      }
+      if (/Resource\s*=\s*"\*"/.test(b.body) && !/Condition/.test(b.body)) {
+        f.push({ sev: 'high', title: 'Resource: "*" with no Condition', detail: 'No runtime scoping.', fix: 'Add Conditions (aws:RequestedRegion, aws:ResourceTag, aws:PrincipalArn) or scope to specific ARNs.' });
+      }
+      return f;
+    },
+    'aws_kms_key': (b) => {
+      const f = [];
+      if (!/enable_key_rotation\s*=\s*true/.test(b.body)) {
+        f.push({ sev: 'med', title: 'KMS rotation not enabled', detail: 'enable_key_rotation is false or unset. Many compliance frameworks require annual rotation.', fix: 'Set enable_key_rotation = true.' });
+      }
+      if (!/deletion_window_in_days/.test(b.body)) {
+        f.push({ sev: 'low', title: 'No deletion window set', detail: 'Default is 30 days, which is the longest. Setting explicitly documents intent.', fix: 'Set deletion_window_in_days = 30.' });
+      }
+      return f;
+    },
+    'aws_cloudtrail': (b) => {
+      const f = [];
+      if (!/is_multi_region_trail\s*=\s*true/.test(b.body)) {
+        f.push({ sev: 'high', title: 'CloudTrail not multi-region', detail: 'Activity in regions other than the trail region is not logged.', fix: 'Set is_multi_region_trail = true.' });
+      }
+      if (!/enable_log_file_validation\s*=\s*true/.test(b.body)) {
+        f.push({ sev: 'med', title: 'Log file validation off', detail: 'Logs can be tampered with after delivery without detection.', fix: 'Set enable_log_file_validation = true.' });
+      }
+      if (!/include_global_service_events\s*=\s*true/.test(b.body)) {
+        f.push({ sev: 'med', title: 'Global service events not included', detail: 'IAM and STS events not logged.', fix: 'Set include_global_service_events = true (default true; do not set false).' });
+      }
+      return f;
+    },
+    'aws_ebs_volume': (b) => {
+      const f = [];
+      if (!/encrypted\s*=\s*true/.test(b.body)) {
+        f.push({ sev: 'high', title: 'EBS volume not encrypted', detail: 'encrypted is false or unset.', fix: 'Set encrypted = true. Enable EBS default encryption at the account level.' });
+      }
+      return f;
+    }
+  };
+
+  function portName(p) {
+    return ({ '22':'SSH','3389':'RDP','3306':'MySQL','5432':'PostgreSQL','27017':'MongoDB','6379':'Redis','9200':'Elasticsearch','5984':'CouchDB','11211':'Memcached','1433':'MSSQL' })[p] || 'service';
+  }
+
+  function analyze() {
+    const raw = $('input').value.trim();
+    if (!raw) {
+      $('results').innerHTML = '<div class="results-empty">No HCL provided.</div>';
+      return;
+    }
+    const blocks = parseBlocks(raw);
+    if (!blocks.length) {
+      $('results').innerHTML = '<div class="error-box">No resource blocks found. Expected: resource "aws_..." "name" { ... }</div>';
+      return;
+    }
+    const findings = [];
+    blocks.forEach(b => {
+      const rule = RULES[b.type];
+      if (rule) {
+        rule(b, blocks).forEach(item => findings.push(Object.assign({}, item, { resource: b.type + '.' + b.name, line: b.line })));
+      }
+    });
+    if (!findings.length) {
+      findings.push({ sev: 'info', title: 'No issues found by static analysis', detail: 'Pattern-based check found no flagged constructs across ' + blocks.length + ' resource block(s). Not a guarantee — also run tfsec, Checkov, and terraform-compliance.', fix: '', resource: '', line: 0 });
+    }
+    render(findings);
+  }
+
+  function render(findings) {
+    const r = $('results');
+    const counts = { crit: 0, high: 0, med: 0, low: 0, info: 0 };
+    findings.forEach(f => counts[f.sev] = (counts[f.sev] || 0) + 1);
+    let html = '<div class="summary">';
+    ['crit','high','med','low','info'].forEach(k => {
+      if (counts[k]) html += '<span class="tag ' + k + '">' + counts[k] + ' ' + k + '</span>';
+    });
+    html += '</div>';
+    findings.forEach(f => {
+      html += '<div class="finding ' + f.sev + '">';
+      html += '<div class="finding-head"><span class="finding-title">' + escapeHtml(f.title) + '</span><span class="tag ' + f.sev + '">' + f.sev + '</span></div>';
+      if (f.resource) html += '<div class="finding-resource">' + escapeHtml(f.resource) + (f.line ? ' (line ~' + f.line + ')' : '') + '</div>';
+      html += '<div class="finding-detail">' + escapeHtml(f.detail) + '</div>';
+      if (f.fix) html += '<div class="finding-fix"><strong>Fix:</strong> ' + escapeHtml(f.fix) + '</div>';
+      html += '</div>';
+    });
+    r.innerHTML = html;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+})();
+</script>
+</body>
+</html>
