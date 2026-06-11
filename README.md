@@ -2,20 +2,22 @@
 
 Browser-based linter for Terraform/HCL. Paste a `.tf` file, get findings on common AWS misconfigurations and embedded secrets.
 
+**Live demo:** https://0xelitesystem.github.io/terraform-security-linter/
+
 Single HTML file. No build step, no dependencies, no network calls.
 
 ## What it checks
 
 Resource-level rules across eight common AWS resource types:
 
-- **`aws_s3_bucket`** — public ACLs, missing versioning, missing server-side encryption, missing block-public-access
-- **`aws_security_group`** — ingress from `0.0.0.0/0` on sensitive ports (22, 3389, 3306, 5432, 6379, 27017), egress to `0.0.0.0/0` on all ports
-- **`aws_db_instance` / `aws_rds_cluster`** — `publicly_accessible = true`, missing `storage_encrypted`, missing `backup_retention_period`, default master usernames
-- **`aws_iam_policy` / `aws_iam_role_policy`** — wildcard actions on wildcard resources (cross-references the iam-policy-analyzer rule set)
-- **`aws_instance`** — IMDSv1 not disabled, public IP on private subnets, missing root-volume encryption
-- **`aws_lambda_function`** — environment variables that look like secrets, missing tracing, no reserved concurrency
-- **`aws_kms_key`** — `enable_key_rotation = false`, overly permissive key policies
-- **`aws_cloudtrail`** — single-region trails, no log file validation, no KMS encryption
+- **`aws_s3_bucket`**, public ACLs, missing versioning, missing server-side encryption, missing block-public-access
+- **`aws_security_group`**, ingress from `0.0.0.0/0` on sensitive ports (22, 3389, 3306, 5432, 6379, 27017), egress to `0.0.0.0/0` on all ports
+- **`aws_db_instance` / `aws_rds_cluster`**, `publicly_accessible = true`, missing `storage_encrypted`, missing `backup_retention_period`, default master usernames
+- **`aws_iam_policy` / `aws_iam_role_policy`**, wildcard actions on wildcard resources (cross-references the iam-policy-analyzer rule set)
+- **`aws_instance`**, IMDSv1 not disabled, public IP on private subnets, missing root-volume encryption
+- **`aws_lambda_function`**, environment variables that look like secrets, missing tracing, no reserved concurrency
+- **`aws_kms_key`**, `enable_key_rotation = false`, overly permissive key policies
+- **`aws_cloudtrail`**, single-region trails, no log file validation, no KMS encryption
 
 Plus a secret heuristic that flags string literals matching AWS access keys, generic API tokens, private key headers, and high-entropy strings in `locals` and `variable default` blocks.
 
