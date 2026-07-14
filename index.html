@@ -87,7 +87,7 @@ footer { max-width: 1300px; margin: 24px auto 0; text-align: center; font-size: 
 <header>
   <div>
     <h1>Terraform Security Linter</h1>
-    <div class="subtitle">Static checks for HCL — public buckets, open SGs, unencrypted stores, hardcoded secrets. Browser-only.</div>
+    <div class="subtitle">Static checks for HCL, public buckets, open SGs, unencrypted stores, hardcoded secrets. Browser-only.</div>
   </div>
   <button class="theme-btn" id="theme-btn">light</button>
 </header>
@@ -373,7 +373,7 @@ resource "aws_cloudtrail" "main" {
       }
     });
     if (!findings.length) {
-      findings.push({ sev: 'info', title: 'No issues found by static analysis', detail: 'Pattern-based check found no flagged constructs across ' + blocks.length + ' resource block(s). Not a guarantee — also run tfsec, Checkov, and terraform-compliance.', fix: '', resource: '', line: 0 });
+      findings.push({ sev: 'info', title: 'No issues found by static analysis', detail: 'Pattern-based check found no flagged constructs across ' + blocks.length + ' resource block(s). Not a guarantee, also run tfsec, Checkov, and terraform-compliance.', fix: '', resource: '', line: 0 });
     }
     render(findings);
   }
