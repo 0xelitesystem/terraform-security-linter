@@ -6,6 +6,17 @@ Browser-based linter for Terraform/HCL. Paste a `.tf` file, get findings on comm
 
 Single HTML file. No build step, no dependencies, no network calls.
 
+## Use
+
+1. Paste the contents of one or more `.tf` files into the Terraform HCL box, or click a sample button (S3 + SG, RDS + Lambda, IAM + KMS).
+2. Click Lint.
+3. Read the findings, each tagged with a severity from critical to info.
+4. Click Clear to start again.
+
+## Why this exists
+
+A public bucket or an open security group usually starts as one line of Terraform, and the full scanners need an install and a CI step before they tell you anything. This gives a quick second look at a pasted file in the browser. It is one HTML file with no dependencies, no tracking and no network calls, released under MIT.
+
 ## What it checks
 
 Resource-level rules across eight common AWS resource types:
@@ -38,6 +49,25 @@ Not a replacement for `tfsec`, `checkov`, or `terrascan`. It does a single-file 
 ## Privacy
 
 The HCL you paste stays in the browser. No analytics, no storage, no network requests after page load.
+
+One exception to "no storage": your light or dark theme choice is saved in localStorage under the key `theme`.
+
+## Run locally
+
+```
+git clone https://github.com/0xelitesystem/terraform-security-linter
+cd terraform-security-linter
+```
+
+Open `index.html` in any browser. Or serve the folder and visit http://localhost:8000:
+
+```
+python -m http.server 8000
+```
+
+## Build
+
+No build step. The whole tool is one `index.html` file with inline CSS and JavaScript.
 
 ## Samples
 
