@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Terraform Security Linter - browser-based Terraform/HCL security linter</title>
+<title>HCL AWS Misconfig Linter - browser-based Terraform/HCL security linter</title>
 <meta name="description" content="Browser-based Terraform/HCL security linter. Flags AWS misconfigurations across S3, IAM, RDS, security groups, and more, plus embedded secrets.">
-<meta property="og:title" content="Terraform Security Linter">
+<meta property="og:title" content="HCL AWS Misconfig Linter">
 <meta property="og:description" content="Browser-based Terraform/HCL security linter. Flags AWS misconfigurations across S3, IAM, RDS, security groups, and more, plus embedded secrets.">
-<meta property="og:url" content="https://0xelitesystem.github.io/terraform-security-linter/">
+<meta property="og:url" content="https://0xelitesystem.github.io/hcl-aws-misconfig-linter/">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
 <style>
@@ -86,8 +86,8 @@ button.primary:hover { filter: brightness(1.1); }
 footer { max-width: 1300px; margin: 24px auto 0; text-align: center; font-size: 11px; color: var(--text-dim); }
 .error-box { background: rgba(239, 68, 68, 0.08); border: 1px solid var(--crit); color: var(--crit); padding: 10px 12px; border-radius: 4px; font-size: 12px; font-family: var(--mono); margin-bottom: 12px; }
 </style>
-<link rel="canonical" href="https://0xelitesystem.github.io/terraform-security-linter/">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Terraform Security Linter","applicationCategory":"DeveloperApplication","operatingSystem":"Any (browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://0xelitesystem.github.io/terraform-security-linter/","author":{"@type":"Person","name":"0xelitesystem","url":"https://elitesystem.ai"}}</script>
+<link rel="canonical" href="https://0xelitesystem.github.io/hcl-aws-misconfig-linter/">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"HCL AWS Misconfig Linter","applicationCategory":"DeveloperApplication","operatingSystem":"Any (browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"url":"https://0xelitesystem.github.io/hcl-aws-misconfig-linter/","author":{"@type":"Person","name":"0xelitesystem","url":"https://elitesystem.ai"}}</script>
 <style>
 /* elitesystem brand tokens: chrome only, meaning preserved */
 :root, :root[data-theme="dark"] {
@@ -119,7 +119,7 @@ footer { max-width: 1300px; margin: 24px auto 0; text-align: center; font-size: 
 <body>
 <header>
   <div>
-    <h1>Terraform Security Linter</h1>
+    <h1>HCL AWS Misconfig Linter</h1>
     <div class="subtitle">Static checks for HCL, public buckets, open SGs, unencrypted stores, hardcoded secrets. Browser-only.</div>
   </div>
   <button class="theme-btn" id="theme-btn">light</button>
@@ -143,7 +143,7 @@ footer { max-width: 1300px; margin: 24px auto 0; text-align: center; font-size: 
     </div>
   </section>
 </main>
-<footer>Static analysis. Pattern-based, AWS-focused. Run on your own machine. No data leaves the browser. <br>An <a href="https://elitesystem.ai" target="_blank" rel="noopener">elitesystem.ai</a> tool. <a href="https://github.com/0xelitesystem/terraform-security-linter" target="_blank" rel="noopener">Source on GitHub</a>. <a href="https://0xelitesystem.github.io/" target="_blank" rel="noopener">More tools</a>. </footer>
+<footer>Static analysis. Pattern-based, AWS-focused. Run on your own machine. No data leaves the browser. <br>An <a href="https://elitesystem.ai" target="_blank" rel="noopener">elitesystem.ai</a> tool. <a href="https://github.com/0xelitesystem/hcl-aws-misconfig-linter" target="_blank" rel="noopener">Source on GitHub</a>. <a href="https://0xelitesystem.github.io/" target="_blank" rel="noopener">More tools</a>. </footer>
 <script>
 (function() {
   const $ = id => document.getElementById(id);

@@ -1,8 +1,8 @@
-# terraform-security-linter
+# hcl-aws-misconfig-linter
 
 Browser-based linter for Terraform/HCL. Paste a `.tf` file, get findings on common AWS misconfigurations and embedded secrets.
 
-**Live demo:** https://0xelitesystem.github.io/terraform-security-linter/
+**Live demo:** https://0xelitesystem.github.io/hcl-aws-misconfig-linter/
 
 Single HTML file. No build step, no dependencies, no network calls.
 
@@ -55,8 +55,8 @@ One exception to "no storage": your light or dark theme choice is saved in local
 ## Run locally
 
 ```
-git clone https://github.com/0xelitesystem/terraform-security-linter
-cd terraform-security-linter
+git clone https://github.com/0xelitesystem/hcl-aws-misconfig-linter
+cd hcl-aws-misconfig-linter
 ```
 
 Open `index.html` in any browser. Or serve the folder and visit http://localhost:8000:
